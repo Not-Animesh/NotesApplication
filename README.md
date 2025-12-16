@@ -1,10 +1,10 @@
 # 🐱 WhiskerNotes - A Cozy Cat-Themed Notes Application
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
-[![CustomTkinter](https://img.shields.io/badge/CustomTkinter-5.2.1-green.svg)](https://github.com/TomSchimansky/CustomTkinter)
+[![CustomTkinter](https://img.shields.io/badge/CustomTkinter-5.2.2-green.svg)](https://github.com/TomSchimansky/CustomTkinter)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A minimalist, cat-themed desktop notes application built with Python and CustomTkinter. WhiskerNotes provides a distraction-free environment for creating, editing, and managing your notes with delightful cat-inspired feedback messages and a cozy aesthetic.
+A feature-rich, cat-themed desktop notes application built with Python and CustomTkinter. WhiskerNotes provides an advanced yet intuitive environment for creating, organizing, and managing your notes with delightful cat-inspired feedback messages, rich formatting options, and a cozy aesthetic.
 
 ---
 
@@ -28,18 +28,20 @@ A minimalist, cat-themed desktop notes application built with Python and CustomT
 In today's digital world, note-taking applications are often cluttered with unnecessary features, overwhelming interfaces, and distracting elements. Users need a simple, calm, and focused environment to capture their thoughts without complexity.
 
 **WhiskerNotes** addresses this need by providing:
-- A minimalist interface that reduces cognitive load
+- A minimalist yet powerful interface that reduces cognitive load
 - Cat-themed visual elements that add personality without distraction
+- Advanced organization features (tags, categories, pinning)
+- Rich text formatting for expressive notes
 - Auto-save functionality to prevent data loss
+- Powerful search and filtering capabilities
 - Light and dark themes for different lighting conditions
 - Persistent storage with SQLite for reliability
-- Zero external dependencies beyond Python and CustomTkinter
 
 **Target Users:**
-- Students taking class notes
-- Writers brainstorming ideas
-- Professionals organizing thoughts
-- Anyone seeking a simple, delightful note-taking experience
+- Students organizing study materials by subject
+- Writers brainstorming and categorizing ideas
+- Professionals managing work notes and meeting minutes
+- Anyone seeking a delightful, powerful note-taking experience
 
 ---
 
@@ -49,19 +51,45 @@ In today's digital world, note-taking applications are often cluttered with unne
 - ✅ **Create Notes** - Start writing instantly with the "+ New Note" button
 - ✅ **Edit Notes** - Click any note card to edit its content
 - ✅ **Delete Notes** - Remove unwanted notes with a single click
-- ✅ **Auto-Save** - Notes automatically save after 2 seconds of inactivity
+- ✅ **Pin Notes** - Pin important notes to the top of your list
+- ✅ **Auto-Save** - Notes automatically save after 2 seconds of inactivity with cute messages
+
+### Organization & Search
+- 🔍 **Instant Search** - Search by title, content, or tags in real-time
+- 🏷️ **Tags System** - Add multiple comma-separated tags to notes
+- 📁 **Categories** - Organize notes into Personal, Study, Ideas, Work, or Other
+- 🎯 **Smart Filtering** - Filter notes by category or search by tag
+- 📊 **Sorting Options** - Sort by last edited, alphabetical, or pinned first
+
+### Rich Text Editor
+- ✨ **Formatting Toolbar** - Bold, italic, underline text
+- 📐 **Font Sizes** - Choose from 5 different font sizes (12-20px)
+- 📝 **Structure Tools** - Add headings and bullet lists
+- 📊 **Word Counter** - Live word count display below editor
+- 🎨 **Markdown Support** - Format text with markdown-style syntax
 
 ### User Experience
 - 🌙 **Theme Toggle** - Switch between Light and Dark modes
+- 🎨 **Accent Colors** - Choose from pink, mint, yellow, or lavender accents
 - 🐾 **Cat-Themed Feedback** - Delightful messages like "Meow! Your note is safe 🐾"
 - 📱 **Responsive Design** - Cards and layout adapt to window size
-- 🎨 **Beautiful UI** - Rounded corners, smooth colors, and modern design
+- ✨ **Hover Effects** - Soft pastel shading on note cards
+- 🖼️ **Cat Images** - Adorable cat illustrations for empty states and icons
+
+### Note Cards Enhancement
+- 📌 **Pin Indicators** - Visual paw star icon for pinned notes
+- 🏷️ **Tag Bubbles** - Tags displayed as colorful pastel bubbles
+- 📁 **Category Display** - See the category of each note at a glance
+- 📝 **Word Count** - Word count visible on each card
+- 🕐 **Timestamps** - Last edit time displayed with paw print emoji
+- 📄 **Content Preview** - See truncated content (150 characters)
 
 ### Technical Features
-- 💾 **SQLite Database** - Reliable local data persistence
+- 💾 **SQLite Database** - Reliable local data persistence with migration support
 - 🔄 **Real-time Updates** - Notes list refreshes automatically
-- 📝 **Rich Text Support** - Write notes with proper formatting
-- 🎯 **Keyboard Shortcuts** - Efficient navigation and editing
+- 🎯 **Keyboard Support** - Efficient navigation and editing
+- 🖼️ **Asset Management** - Custom icons and backgrounds
+- 📊 **Data Integrity** - Automatic word count tracking and timestamps
 
 ---
 
