@@ -8,6 +8,7 @@ from database import Database
 from themes import Theme, CAT_MESSAGES
 from ui.home import HomeScreen
 from ui.editor import EditorScreen
+import os
 
 
 class WhiskerNotes(ctk.CTk):
@@ -21,6 +22,14 @@ class WhiskerNotes(ctk.CTk):
         self.title("WhiskerNotes 🐱")
         self.geometry("900x700")
         self.minsize(800, 600)
+        
+        # Set window icon
+        icon_path = Theme.get_asset_path("app_icon.png")
+        if icon_path and os.path.exists(icon_path):
+            try:
+                self.iconphoto(True, ctk.CTkImage(light_image=self._load_image(icon_path)))
+            except:
+                pass  # Fallback if icon loading fails
         
         # Initialize database
         self.db = Database()
@@ -41,6 +50,11 @@ class WhiskerNotes(ctk.CTk):
         # Show home screen
         self.show_home_screen()
     
+    def _load_image(self, path):
+        """Load image from path"""
+        from PIL import Image
+        return Image.open(path)
+    
     def show_home_screen(self):
         """Display the home screen"""
         # Hide editor if visible
@@ -54,7 +68,9 @@ class WhiskerNotes(ctk.CTk):
                 on_create_note=self.create_note,
                 on_edit_note=self.edit_note,
                 on_delete_note=self.delete_note,
-                on_toggle_theme=self.toggle_theme
+                on_toggle_theme=self.toggle_theme,
+                on_toggle_pin=self.toggle_pin,
+                db=self.db
             )
         
         colors = Theme.get_colors()
@@ -105,7 +121,7 @@ class WhiskerNotes(ctk.CTk):
         if note:
             self.show_editor_screen(note=note)
     
-    def save_note(self, title: str, content: str, note_id: int = None):
+    def save_note(self, title: str, content: str, note_id: int = None, tags: str = "", category: str = "Personal"):
         """
         Save a note (create or update)
         
@@ -113,13 +129,15 @@ class WhiskerNotes(ctk.CTk):
             title: Note title
             content: Note content
             note_id: ID of existing note, or None for new note
+            tags: Comma-separated tags
+            category: Note category
         """
         if note_id:
             # Update existing note
-            self.db.update_note(note_id, title, content)
+            self.db.update_note(note_id, title, content, tags, category)
         else:
             # Create new note
-            new_id = self.db.create_note(title, content)
+            new_id = self.db.create_note(title, content, tags, category)
             # Update editor with new note ID
             if self.editor_screen:
                 self.editor_screen.current_note_id = new_id
@@ -136,10 +154,32 @@ class WhiskerNotes(ctk.CTk):
             if self.home_screen:
                 self.home_screen.show_status(CAT_MESSAGES["note_deleted"])
     
-    def refresh_notes(self):
-        """Refresh the notes display"""
+    def toggle_pin(self, note_id: int):
+        """
+        Toggle pin status of a note
+        
+        Args:
+            note_id: ID of the note to pin/unpin
+        """
+        if self.db.toggle_pin(note_id):
+            self.refresh_notes()
+            if self.home_screen:
+                # Get current pin status to show appropriate message
+                note = self.db.get_note(note_id)
+                if note and note.get("is_pinned"):
+                    self.home_screen.show_status(CAT_MESSAGES["note_pinned"])
+                else:
+                    self.home_screen.show_status(CAT_MESSAGES["note_unpinned"])
+    
+    def refresh_notes(self, sort_by: str = "updated"):
+        """
+        Refresh the notes display
+        
+        Args:
+            sort_by: Sort method - 'updated', 'alphabetical', or 'pinned'
+        """
         if self.home_screen:
-            notes = self.db.get_all_notes()
+            notes = self.db.get_all_notes(sort_by=sort_by)
             self.home_screen.display_notes(notes)
     
     def toggle_theme(self):

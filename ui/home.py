@@ -6,13 +6,16 @@ Dashboard displaying note cards with create, edit, delete functionality
 import customtkinter as ctk
 from typing import Callable, List, Dict
 from themes import Theme, CAT_MESSAGES
+from PIL import Image
+import os
 
 
 class HomeScreen(ctk.CTkFrame):
     """Home screen with note cards display"""
     
     def __init__(self, parent, on_create_note: Callable, on_edit_note: Callable, 
-                 on_delete_note: Callable, on_toggle_theme: Callable):
+                 on_delete_note: Callable, on_toggle_theme: Callable, 
+                 on_toggle_pin: Callable, db):
         """
         Initialize home screen
         
@@ -22,6 +25,8 @@ class HomeScreen(ctk.CTkFrame):
             on_edit_note: Callback for editing a note (receives note_id)
             on_delete_note: Callback for deleting a note (receives note_id)
             on_toggle_theme: Callback for toggling theme
+            on_toggle_pin: Callback for toggling pin (receives note_id)
+            db: Database instance for search/filter operations
         """
         super().__init__(parent)
         
@@ -29,8 +34,14 @@ class HomeScreen(ctk.CTkFrame):
         self.on_edit_note = on_edit_note
         self.on_delete_note = on_delete_note
         self.on_toggle_theme = on_toggle_theme
+        self.on_toggle_pin = on_toggle_pin
+        self.db = db
         
         self.notes = []
+        self.filtered_notes = []
+        self.current_filter = None
+        self.current_sort = "updated"
+        
         self.setup_ui()
     
     def setup_ui(self):
@@ -39,7 +50,7 @@ class HomeScreen(ctk.CTkFrame):
         
         # Configure grid
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(2, weight=1)
         
         # Header frame
         header_frame = ctk.CTkFrame(self, fg_color=colors["bg"], corner_radius=0)
@@ -88,13 +99,69 @@ class HomeScreen(ctk.CTkFrame):
         )
         self.create_button.pack(side="left", padx=5)
         
+        # Search and filter frame
+        search_frame = ctk.CTkFrame(self, fg_color=colors["bg"], corner_radius=0)
+        search_frame.grid(row=1, column=0, sticky="ew", padx=20, pady=(0, 10))
+        search_frame.grid_columnconfigure(0, weight=1)
+        
+        # Search bar
+        self.search_entry = ctk.CTkEntry(
+            search_frame,
+            placeholder_text="🔍 Search notes by title, content, or tags...",
+            height=40,
+            corner_radius=20,
+            border_width=2,
+            border_color=colors["border"],
+            fg_color=colors["card_bg"],
+            text_color=colors["fg"]
+        )
+        self.search_entry.grid(row=0, column=0, sticky="ew", padx=(0, 10))
+        self.search_entry.bind("<KeyRelease>", self.on_search)
+        
+        # Sort dropdown
+        self.sort_var = ctk.StringVar(value="Last Edited")
+        self.sort_dropdown = ctk.CTkOptionMenu(
+            search_frame,
+            values=["Last Edited", "Alphabetical", "Pinned First"],
+            variable=self.sort_var,
+            command=self.on_sort_change,
+            width=150,
+            height=40,
+            corner_radius=20,
+            fg_color=colors["button_bg"],
+            button_color=colors["accent"],
+            button_hover_color=colors["card_hover"]
+        )
+        self.sort_dropdown.grid(row=0, column=1)
+        
+        # Category filter frame
+        category_frame = ctk.CTkFrame(self, fg_color=colors["bg"], corner_radius=0)
+        category_frame.grid(row=1, column=0, sticky="ew", padx=20, pady=(50, 5))
+        
+        # Category buttons
+        self.category_buttons = {}
+        for i, category in enumerate(["All"] + Theme.CATEGORIES):
+            btn = ctk.CTkButton(
+                category_frame,
+                text=category,
+                width=80,
+                height=30,
+                corner_radius=15,
+                fg_color=colors["accent"] if category == "All" else colors["card_bg"],
+                text_color=colors["button_fg"] if category == "All" else colors["fg"],
+                hover_color=colors["card_hover"],
+                command=lambda c=category: self.filter_by_category(c)
+            )
+            btn.pack(side="left", padx=5)
+            self.category_buttons[category] = btn
+        
         # Scrollable frame for notes
         self.scrollable_frame = ctk.CTkScrollableFrame(
             self,
             fg_color=colors["bg"],
             corner_radius=0
         )
-        self.scrollable_frame.grid(row=1, column=0, sticky="nsew", padx=20, pady=10)
+        self.scrollable_frame.grid(row=2, column=0, sticky="nsew", padx=20, pady=10)
         self.scrollable_frame.grid_columnconfigure(0, weight=1)
         
         # Status message
@@ -104,7 +171,53 @@ class HomeScreen(ctk.CTkFrame):
             font=ctk.CTkFont(size=12),
             text_color=colors["accent"]
         )
-        self.status_label.grid(row=2, column=0, sticky="ew", padx=20, pady=(0, 10))
+        self.status_label.grid(row=3, column=0, sticky="ew", padx=20, pady=(0, 10))
+    
+    def on_search(self, event=None):
+        """Handle search input"""
+        query = self.search_entry.get().strip()
+        if query:
+            # Search using database
+            self.filtered_notes = self.db.search_notes(query)
+            self.display_notes(self.filtered_notes)
+        else:
+            # Show all notes
+            self.display_notes(self.notes)
+    
+    def on_sort_change(self, choice):
+        """Handle sort option change"""
+        sort_map = {
+            "Last Edited": "updated",
+            "Alphabetical": "alphabetical",
+            "Pinned First": "pinned"
+        }
+        self.current_sort = sort_map.get(choice, "updated")
+        
+        # Re-fetch and display sorted notes
+        notes = self.db.get_all_notes(sort_by=self.current_sort)
+        self.display_notes(notes)
+    
+    def filter_by_category(self, category):
+        """Filter notes by category"""
+        colors = Theme.get_colors()
+        
+        # Update button colors
+        for cat, btn in self.category_buttons.items():
+            if cat == category:
+                btn.configure(fg_color=colors["accent"], text_color=colors["button_fg"])
+            else:
+                btn.configure(fg_color=colors["card_bg"], text_color=colors["fg"])
+        
+        # Filter notes
+        if category == "All":
+            self.current_filter = None
+            self.display_notes(self.notes)
+        else:
+            # Remove emoji from category name for database query
+            cat_name = category.split()[0]
+            self.current_filter = cat_name
+            filtered = self.db.get_notes_by_category(cat_name)
+            self.display_notes(filtered)
     
     def toggle_theme(self):
         """Toggle between light and dark themes"""
@@ -152,14 +265,28 @@ class HomeScreen(ctk.CTkFrame):
             widget.destroy()
         
         if not notes:
-            # Empty state
+            # Empty state with cat reading image
+            empty_frame = ctk.CTkFrame(self.scrollable_frame, fg_color=colors["bg"])
+            empty_frame.pack(pady=50)
+            
+            # Try to load cat reading image
+            cat_image_path = Theme.get_asset_path("cat_reading.png")
+            if cat_image_path and os.path.exists(cat_image_path):
+                try:
+                    img = Image.open(cat_image_path)
+                    cat_image = ctk.CTkImage(light_image=img, dark_image=img, size=(150, 150))
+                    image_label = ctk.CTkLabel(empty_frame, image=cat_image, text="")
+                    image_label.pack(pady=10)
+                except:
+                    pass
+            
             empty_label = ctk.CTkLabel(
-                self.scrollable_frame,
+                empty_frame,
                 text=CAT_MESSAGES["no_notes"],
                 font=ctk.CTkFont(size=18),
                 text_color=colors["fg"]
             )
-            empty_label.pack(pady=100)
+            empty_label.pack(pady=10)
             return
         
         # Create note cards
@@ -168,38 +295,65 @@ class HomeScreen(ctk.CTkFrame):
     
     def create_note_card(self, note: Dict):
         """
-        Create a note card widget
+        Create a note card widget with enhanced features
         
         Args:
             note: Note dictionary
         """
         colors = Theme.get_colors()
+        is_pinned = note.get("is_pinned", 0)
         
-        # Card frame
+        # Card frame with hover effect
         card = ctk.CTkFrame(
             self.scrollable_frame,
             fg_color=colors["card_bg"],
             corner_radius=15,
-            border_width=1,
-            border_color=colors["border"]
+            border_width=2 if is_pinned else 1,
+            border_color=colors["pin_color"] if is_pinned else colors["border"]
         )
         card.pack(fill="x", pady=10, padx=5)
         card.grid_columnconfigure(0, weight=1)
         
+        # Add hover effect
+        card.bind("<Enter>", lambda e: card.configure(fg_color=colors["card_hover"]))
+        card.bind("<Leave>", lambda e: card.configure(fg_color=colors["card_bg"]))
+        
+        # Title row with pin indicator
+        title_frame = ctk.CTkFrame(card, fg_color=colors["card_bg"])
+        title_frame.grid(row=0, column=0, sticky="ew", padx=15, pady=(15, 5))
+        title_frame.grid_columnconfigure(1, weight=1)
+        
+        # Pin indicator
+        if is_pinned:
+            pin_icon_path = Theme.get_asset_path("paw_star_icon.png")
+            if pin_icon_path and os.path.exists(pin_icon_path):
+                try:
+                    pin_img = Image.open(pin_icon_path)
+                    pin_image = ctk.CTkImage(light_image=pin_img, dark_image=pin_img, size=(20, 20))
+                    pin_label = ctk.CTkLabel(title_frame, image=pin_image, text="")
+                    pin_label.grid(row=0, column=0, padx=(0, 5))
+                except:
+                    # Fallback to emoji
+                    pin_label = ctk.CTkLabel(title_frame, text="📌", font=ctk.CTkFont(size=14))
+                    pin_label.grid(row=0, column=0, padx=(0, 5))
+            else:
+                pin_label = ctk.CTkLabel(title_frame, text="📌", font=ctk.CTkFont(size=14))
+                pin_label.grid(row=0, column=0, padx=(0, 5))
+        
         # Title
         title = note.get("title", "Untitled")
         title_label = ctk.CTkLabel(
-            card,
+            title_frame,
             text=title if len(title) <= 50 else title[:50] + "...",
             font=ctk.CTkFont(size=16, weight="bold"),
             text_color=colors["fg"],
             anchor="w"
         )
-        title_label.grid(row=0, column=0, sticky="w", padx=15, pady=(15, 5))
+        title_label.grid(row=0, column=1, sticky="w")
         
         # Content preview
         content = note.get("content", "")
-        preview = content[:100] + "..." if len(content) > 100 else content
+        preview = content[:150] + "..." if len(content) > 150 else content
         content_label = ctk.CTkLabel(
             card,
             text=preview,
@@ -211,9 +365,81 @@ class HomeScreen(ctk.CTkFrame):
         )
         content_label.grid(row=1, column=0, sticky="w", padx=15, pady=(0, 10))
         
-        # Button frame
+        # Tags display
+        tags = note.get("tags", "")
+        if tags:
+            tags_frame = ctk.CTkFrame(card, fg_color=colors["card_bg"])
+            tags_frame.grid(row=2, column=0, sticky="w", padx=15, pady=(0, 5))
+            
+            for tag in tags.split(","):
+                tag = tag.strip()
+                if tag:
+                    tag_label = ctk.CTkLabel(
+                        tags_frame,
+                        text=f"#{tag}",
+                        font=ctk.CTkFont(size=10),
+                        fg_color=colors["tag_bg"],
+                        text_color=colors["accent"],
+                        corner_radius=10,
+                        padx=8,
+                        pady=2
+                    )
+                    tag_label.pack(side="left", padx=3)
+        
+        # Category and timestamp row
+        info_frame = ctk.CTkFrame(card, fg_color=colors["card_bg"])
+        info_frame.grid(row=3, column=0, sticky="ew", padx=15, pady=(0, 10))
+        info_frame.grid_columnconfigure(0, weight=1)
+        
+        # Category
+        category = note.get("category", "Personal")
+        category_label = ctk.CTkLabel(
+            info_frame,
+            text=f"📁 {category}",
+            font=ctk.CTkFont(size=10),
+            text_color=colors["fg"]
+        )
+        category_label.grid(row=0, column=0, sticky="w")
+        
+        # Word count
+        word_count = note.get("word_count", 0)
+        wc_label = ctk.CTkLabel(
+            info_frame,
+            text=f"📝 {word_count} words",
+            font=ctk.CTkFont(size=10),
+            text_color=colors["fg"]
+        )
+        wc_label.grid(row=0, column=1, padx=10)
+        
+        # Updated time
+        updated_at = note.get("updated_at", "")
+        if updated_at:
+            time_label = ctk.CTkLabel(
+                info_frame,
+                text=f"🐾 {updated_at}",
+                font=ctk.CTkFont(size=10),
+                text_color=colors["accent"]
+            )
+            time_label.grid(row=0, column=2, sticky="e")
+        
+        # Button frame (top right of card)
         button_frame = ctk.CTkFrame(card, fg_color=colors["card_bg"])
-        button_frame.grid(row=0, column=1, rowspan=2, padx=10, pady=10)
+        button_frame.grid(row=0, column=1, rowspan=4, padx=10, pady=10, sticky="ne")
+        
+        # Pin/Unpin button
+        pin_text = "Unpin" if is_pinned else "Pin"
+        pin_btn = ctk.CTkButton(
+            button_frame,
+            text=pin_text,
+            width=70,
+            height=30,
+            corner_radius=15,
+            fg_color=colors["pin_color"] if is_pinned else colors["button_bg"],
+            text_color=colors["button_fg"],
+            hover_color=colors["card_hover"],
+            command=lambda: self.on_toggle_pin(note["id"])
+        )
+        pin_btn.pack(pady=3)
         
         # Edit button
         edit_btn = ctk.CTkButton(
@@ -227,7 +453,7 @@ class HomeScreen(ctk.CTkFrame):
             hover_color=colors["card_hover"],
             command=lambda: self.on_edit_note(note["id"])
         )
-        edit_btn.pack(side="left", padx=5)
+        edit_btn.pack(pady=3)
         
         # Delete button
         delete_btn = ctk.CTkButton(
@@ -241,18 +467,7 @@ class HomeScreen(ctk.CTkFrame):
             hover_color="#FF5252",
             command=lambda: self.delete_note_with_confirm(note["id"])
         )
-        delete_btn.pack(side="left", padx=5)
-        
-        # Updated time
-        updated_at = note.get("updated_at", "")
-        if updated_at:
-            time_label = ctk.CTkLabel(
-                card,
-                text=f"🐾 {updated_at}",
-                font=ctk.CTkFont(size=10),
-                text_color=colors["accent"]
-            )
-            time_label.grid(row=2, column=0, sticky="w", padx=15, pady=(0, 10))
+        delete_btn.pack(pady=3)
     
     def delete_note_with_confirm(self, note_id: int):
         """
