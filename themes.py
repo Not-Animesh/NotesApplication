@@ -1,6 +1,7 @@
 """
 WhiskerNotes - Theme Configuration
 Defines color schemes and UI styling for light and dark modes
+Enhanced with modern design tokens
 """
 
 import os
@@ -9,46 +10,62 @@ import os
 class Theme:
     """Central theme configuration for WhiskerNotes"""
     
-    # Available accent colors
+    # Available accent colors with gradients
     ACCENT_COLORS = {
-        "pink": "#F6B1C3",
-        "mint": "#B8E6D5",
-        "yellow": "#FFE5B4",
-        "lavender": "#E6E6FA"
+        "pink": {
+            "primary": "#F6B1C3",
+            "light": "#FFE5EC",
+            "dark": "#E89BB5",
+            "gradient": ("#FFE5EC", "#F6B1C3")
+        },
+        "mint": {
+            "primary": "#B8E6D5",
+            "light": "#E0F5ED",
+            "dark": "#9DD9C4",
+            "gradient": ("#E0F5ED", "#B8E6D5")
+        },
+        "yellow": {
+            "primary": "#FFE5B4",
+            "light": "#FFF4E0",
+            "dark": "#FFD99A",
+            "gradient": ("#FFF4E0", "#FFE5B4")
+        },
+        "lavender": {
+            "primary": "#E6E6FA",
+            "light": "#F0F0FF",
+            "dark": "#D4D4F0",
+            "gradient": ("#F0F0FF", "#E6E6FA")
+        }
     }
     
-    # Light Theme Colors
+    # Light Theme Colors - Blended with lavender gradient background
     LIGHT = {
-        "bg": "#F6F1E7",           # Warm cream background
-        "fg": "#2C2C2C",           # Dark text
+        "bg": "#F5F0FF",           # Light lavender blend (allows background to show)
+        "bg_secondary": "#F0EBFF",  # Secondary background blend
+        "fg": "#1A1A1A",           # Rich dark text
+        "fg_secondary": "#4A4A4A",  # Secondary text
         "accent": "#F6B1C3",       # Pink accent
-        "card_bg": "#FFFFFF",      # White card background
-        "card_hover": "#FFE5EC",   # Light pink hover
+        "accent_light": "#FFE5EC", # Light accent
+        "accent_dark": "#E89BB5",  # Dark accent
+        "card_bg": "#FFFFFF",      # Pure white card (for readability)
+        "card_hover": "#FFF8FF",   # Light lavender hover
+        "card_shadow": "#E8E0D5",  # Subtle shadow
         "button_bg": "#F6B1C3",    # Pink button
-        "button_fg": "#2C2C2C",    # Dark button text
-        "border": "#E8D5D5",       # Light border
+        "button_hover": "#E89BB5", # Button hover
+        "button_fg": "#1A1A1A",    # Button text
+        "border": "#E0D5E8",       # Soft lavender border
+        "border_light": "#F0EBF5", # Light lavender border
         "scrollbar": "#F6B1C3",    # Pink scrollbar
         "tag_bg": "#FFE5EC",       # Tag background
-        "pin_color": "#FFD700",    # Gold pin color
+        "tag_fg": "#8B4A5C",       # Tag text
+        "pin_color": "#FFB800",    # Vibrant gold
+        "success": "#4CAF50",      # Success green
+        "error": "#F44336",        # Error red
+        "warning": "#FF9800",      # Warning orange
+        "info": "#2196F3",         # Info blue
     }
     
-    # Dark Theme Colors
-    DARK = {
-        "bg": "#0F0F0F",           # Deep black background
-        "fg": "#E8E8E8",           # Light text
-        "accent": "#F6B1C3",       # Pink accent
-        "card_bg": "#1A1A1A",      # Dark card background
-        "card_hover": "#2A2A2A",   # Lighter dark hover
-        "button_bg": "#F6B1C3",    # Pink button
-        "button_fg": "#0F0F0F",    # Dark button text
-        "border": "#2A2A2A",       # Dark border
-        "scrollbar": "#F6B1C3",    # Pink scrollbar
-        "tag_bg": "#2A2A2A",       # Tag background
-        "pin_color": "#FFD700",    # Gold pin color
-    }
-    
-    # Current theme (default to light)
-    current_theme = "light"
+    # Current accent
     current_accent = "pink"
     
     # Default categories with emojis
@@ -56,23 +73,54 @@ class Theme:
     
     @classmethod
     def get_colors(cls):
-        """Get current theme colors"""
-        colors = cls.LIGHT.copy() if cls.current_theme == "light" else cls.DARK.copy()
+        """Get theme colors with accent color applied"""
+        colors = cls.LIGHT.copy()
         # Apply current accent color
         if cls.current_accent in cls.ACCENT_COLORS:
-            colors["accent"] = cls.ACCENT_COLORS[cls.current_accent]
+            accent = cls.ACCENT_COLORS[cls.current_accent]
+            colors["accent"] = accent["primary"]
+            colors["accent_light"] = accent["light"]
+            colors["accent_dark"] = accent["dark"]
         return colors
     
     @classmethod
-    def toggle_theme(cls):
-        """Toggle between light and dark themes"""
-        cls.current_theme = "dark" if cls.current_theme == "light" else "light"
-        return cls.current_theme
+    def get_accent_gradient(cls):
+        """Get gradient colors for current accent"""
+        if cls.current_accent in cls.ACCENT_COLORS:
+            return cls.ACCENT_COLORS[cls.current_accent]["gradient"]
+        return ("#F6B1C3", "#F6B1C3")
     
     @classmethod
-    def is_dark(cls):
-        """Check if current theme is dark"""
-        return cls.current_theme == "dark"
+    def get_spacing(cls):
+        """Get spacing tokens"""
+        return {
+            "xs": 4,
+            "sm": 8,
+            "md": 16,
+            "lg": 24,
+            "xl": 32,
+            "xxl": 48
+        }
+    
+    @classmethod
+    def get_radius(cls):
+        """Get border radius tokens"""
+        return {
+            "sm": 8,
+            "md": 12,
+            "lg": 16,
+            "xl": 20,
+            "full": 999
+        }
+    
+    @classmethod
+    def get_shadows(cls):
+        """Get shadow definitions"""
+        return {
+            "sm": ("#00000020", 2),
+            "md": ("#00000030", 4),
+            "lg": ("#00000040", 8),
+        }
     
     @classmethod
     def set_accent(cls, accent: str):
@@ -97,6 +145,14 @@ class Theme:
         
         path = os.path.join(base_path, "assets", subdir, asset_name)
         return path if os.path.exists(path) else None
+    
+    @classmethod
+    def get_background_image(cls):
+        """Get background image - always uses lavender gradient"""
+        bg_path = cls.get_asset_path("bg_lavender_gradient.jpg")
+        if bg_path and os.path.exists(bg_path):
+            return bg_path
+        return None
 
 
 # Cat-themed feedback messages

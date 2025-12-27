@@ -35,228 +35,245 @@ class EditorScreen(ctk.CTkFrame):
         self.setup_ui()
     
     def setup_ui(self):
-        """Setup the editor UI"""
+        """Setup the editor UI with enhanced styling"""
         colors = Theme.get_colors()
+        spacing = Theme.get_spacing()
+        radius = Theme.get_radius()
         
         # Configure grid
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(3, weight=1)
         
-        # Header frame
-        header_frame = ctk.CTkFrame(self, fg_color=colors["bg"], corner_radius=0)
-        header_frame.grid(row=0, column=0, sticky="ew", padx=20, pady=(20, 10))
+        # Header frame - blend with background
+        header_frame = ctk.CTkFrame(self, fg_color="#F5F0FF", corner_radius=0)
+        header_frame.grid(row=0, column=0, sticky="ew", padx=spacing["lg"], pady=(spacing["lg"], spacing["md"]))
         header_frame.grid_columnconfigure(1, weight=1)
         
-        # Back button
+        # Back button with refined styling
         self.back_button = ctk.CTkButton(
             header_frame,
             text="← Back",
-            width=100,
-            height=40,
-            corner_radius=20,
+            width=120,
+            height=48,
+            corner_radius=radius["lg"],
             fg_color=colors["button_bg"],
             text_color=colors["button_fg"],
-            hover_color=colors["card_hover"],
+            hover_color=colors["button_hover"] if "button_hover" in colors else colors["accent_dark"],
             font=ctk.CTkFont(size=14),
             command=self.on_back
         )
         self.back_button.grid(row=0, column=0, sticky="w")
         
-        # Save button
+        # Save button with refined styling
         self.save_button = ctk.CTkButton(
             header_frame,
             text="💾 Save",
-            width=100,
-            height=40,
-            corner_radius=20,
-            fg_color=colors["button_bg"],
+            width=120,
+            height=48,
+            corner_radius=radius["lg"],
+            fg_color=colors["accent"],
             text_color=colors["button_fg"],
-            hover_color=colors["card_hover"],
-            font=ctk.CTkFont(size=14, weight="bold"),
+            hover_color=colors["button_hover"] if "button_hover" in colors else colors["accent_dark"],
+            font=ctk.CTkFont(size=15, weight="bold"),
             command=self.save_note
         )
         self.save_button.grid(row=0, column=2, sticky="e")
         
-        # Title entry
+        # Title entry with refined styling
         self.title_entry = ctk.CTkEntry(
             self,
             placeholder_text="🐱 Note Title...",
-            height=50,
-            corner_radius=15,
+            height=52,
+            corner_radius=radius["lg"],
             border_width=2,
             border_color=colors["border"],
             fg_color=colors["card_bg"],
             text_color=colors["fg"],
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=19, weight="bold")
         )
-        self.title_entry.grid(row=1, column=0, sticky="ew", padx=20, pady=10)
+        self.title_entry.grid(row=1, column=0, sticky="ew", padx=spacing["lg"], pady=spacing["md"])
         self.title_entry.bind("<KeyRelease>", self.schedule_auto_save)
         
-        # Metadata frame (tags and category)
-        meta_frame = ctk.CTkFrame(self, fg_color=colors["bg"], corner_radius=0)
-        meta_frame.grid(row=2, column=0, sticky="ew", padx=20, pady=(0, 10))
+        # Metadata frame (tags and category) with enhanced styling
+        meta_frame = ctk.CTkFrame(self, fg_color="#F5F0FF", corner_radius=0)
+        meta_frame.grid(row=2, column=0, sticky="ew", padx=spacing["lg"], pady=(0, spacing["md"]))
         meta_frame.grid_columnconfigure(0, weight=1)
         
-        # Tags entry
+        # Tags entry with refined styling
         self.tags_entry = ctk.CTkEntry(
             meta_frame,
             placeholder_text="🏷️ Tags (comma-separated, e.g., todo, study, important)",
-            height=35,
-            corner_radius=15,
+            height=42,
+            corner_radius=radius["md"],
             border_width=2,
             border_color=colors["border"],
             fg_color=colors["card_bg"],
             text_color=colors["fg"],
-            font=ctk.CTkFont(size=12)
+            font=ctk.CTkFont(size=14)
         )
-        self.tags_entry.grid(row=0, column=0, sticky="ew", padx=(0, 10))
+        self.tags_entry.grid(row=0, column=0, sticky="ew", padx=(0, spacing["sm"]))
         
-        # Category dropdown
+        # Category dropdown with refined styling
         self.category_var = ctk.StringVar(value="Personal")
         self.category_dropdown = ctk.CTkOptionMenu(
             meta_frame,
             values=[cat.split()[0] for cat in Theme.CATEGORIES],
             variable=self.category_var,
-            width=150,
-            height=35,
-            corner_radius=15,
+            width=170,
+            height=42,
+            corner_radius=radius["md"],
             fg_color=colors["button_bg"],
             button_color=colors["accent"],
-            button_hover_color=colors["card_hover"]
+            button_hover_color=colors["button_hover"] if "button_hover" in colors else colors["accent_dark"],
+            font=ctk.CTkFont(size=14)
         )
         self.category_dropdown.grid(row=0, column=1)
         
-        # Formatting toolbar frame
-        toolbar_frame = ctk.CTkFrame(self, fg_color=colors["card_bg"], corner_radius=15)
-        toolbar_frame.grid(row=3, column=0, sticky="ew", padx=20, pady=(0, 10))
+        # Formatting toolbar frame with enhanced styling
+        toolbar_frame = ctk.CTkFrame(self, fg_color=colors["card_bg"], corner_radius=radius["md"])
+        toolbar_frame.grid(row=3, column=0, sticky="ew", padx=spacing["lg"], pady=(0, spacing["md"]))
         
         toolbar_label = ctk.CTkLabel(
             toolbar_frame,
-            text="✨ Formatting Toolbar:",
-            font=ctk.CTkFont(size=12, weight="bold"),
+            text="✨ Formatting:",
+            font=ctk.CTkFont(size=13, weight="bold"),
             text_color=colors["fg"]
         )
-        toolbar_label.pack(side="left", padx=10)
+        toolbar_label.pack(side="left", padx=spacing["md"], pady=spacing["sm"])
         
-        # Bold button
+        # Bold button with refined styling
         bold_btn = ctk.CTkButton(
             toolbar_frame,
             text="B",
-            width=35,
-            height=30,
-            corner_radius=10,
+            width=40,
+            height=36,
+            corner_radius=radius["sm"],
             fg_color=colors["accent"],
-            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color=colors["button_fg"],
+            hover_color=colors["button_hover"] if "button_hover" in colors else colors["accent_dark"],
+            font=ctk.CTkFont(size=13, weight="bold"),
             command=lambda: self.insert_format("**", "**")
         )
-        bold_btn.pack(side="left", padx=3)
+        bold_btn.pack(side="left", padx=spacing["xs"])
         
-        # Italic button
+        # Italic button with refined styling
         italic_btn = ctk.CTkButton(
             toolbar_frame,
             text="I",
-            width=35,
-            height=30,
-            corner_radius=10,
+            width=40,
+            height=36,
+            corner_radius=radius["sm"],
             fg_color=colors["accent"],
-            font=ctk.CTkFont(size=12, slant="italic"),
+            text_color=colors["button_fg"],
+            hover_color=colors["button_hover"] if "button_hover" in colors else colors["accent_dark"],
+            font=ctk.CTkFont(size=13, slant="italic"),
             command=lambda: self.insert_format("*", "*")
         )
-        italic_btn.pack(side="left", padx=3)
+        italic_btn.pack(side="left", padx=spacing["xs"])
         
-        # Underline button
+        # Underline button with refined styling
         underline_btn = ctk.CTkButton(
             toolbar_frame,
             text="U",
-            width=35,
-            height=30,
-            corner_radius=10,
+            width=40,
+            height=36,
+            corner_radius=radius["sm"],
             fg_color=colors["accent"],
-            font=ctk.CTkFont(size=12, underline=True),
+            text_color=colors["button_fg"],
+            hover_color=colors["button_hover"] if "button_hover" in colors else colors["accent_dark"],
+            font=ctk.CTkFont(size=13, underline=True),
             command=lambda: self.insert_format("__", "__")
         )
-        underline_btn.pack(side="left", padx=3)
+        underline_btn.pack(side="left", padx=spacing["xs"])
         
-        # Heading button
+        # Heading button with refined styling
         heading_btn = ctk.CTkButton(
             toolbar_frame,
             text="H",
-            width=35,
-            height=30,
-            corner_radius=10,
+            width=40,
+            height=36,
+            corner_radius=radius["sm"],
             fg_color=colors["accent"],
+            text_color=colors["button_fg"],
+            hover_color=colors["button_hover"] if "button_hover" in colors else colors["accent_dark"],
             font=ctk.CTkFont(size=14, weight="bold"),
             command=lambda: self.insert_format("## ", "")
         )
-        heading_btn.pack(side="left", padx=3)
+        heading_btn.pack(side="left", padx=spacing["xs"])
         
-        # Bullet list button
+        # Bullet list button with refined styling
         bullet_btn = ctk.CTkButton(
             toolbar_frame,
             text="•",
-            width=35,
-            height=30,
-            corner_radius=10,
+            width=40,
+            height=36,
+            corner_radius=radius["sm"],
             fg_color=colors["accent"],
+            text_color=colors["button_fg"],
+            hover_color=colors["button_hover"] if "button_hover" in colors else colors["accent_dark"],
             font=ctk.CTkFont(size=16),
             command=lambda: self.insert_format("- ", "")
         )
-        bullet_btn.pack(side="left", padx=3)
+        bullet_btn.pack(side="left", padx=spacing["xs"])
         
-        # Font size dropdown
+        # Font size dropdown with refined styling
         font_size_label = ctk.CTkLabel(
             toolbar_frame,
             text="Size:",
-            font=ctk.CTkFont(size=10),
+            font=ctk.CTkFont(size=12),
             text_color=colors["fg"]
         )
-        font_size_label.pack(side="left", padx=(10, 5))
+        font_size_label.pack(side="left", padx=(spacing["md"], spacing["xs"]))
         
         self.font_size_var = ctk.StringVar(value="14")
         font_size_menu = ctk.CTkOptionMenu(
             toolbar_frame,
             values=["12", "14", "16", "18", "20"],
             variable=self.font_size_var,
-            width=60,
-            height=30,
-            corner_radius=10,
+            width=70,
+            height=36,
+            corner_radius=radius["sm"],
+            fg_color=colors["button_bg"],
+            button_color=colors["accent"],
+            button_hover_color=colors["button_hover"] if "button_hover" in colors else colors["accent_dark"],
+            font=ctk.CTkFont(size=12),
             command=self.change_font_size
         )
-        font_size_menu.pack(side="left", padx=3)
+        font_size_menu.pack(side="left", padx=spacing["xs"])
         
-        # Content text box
+        # Content text box with enhanced styling
         self.content_text = ctk.CTkTextbox(
             self,
-            corner_radius=15,
+            corner_radius=radius["lg"],
             border_width=2,
             border_color=colors["border"],
             fg_color=colors["card_bg"],
             text_color=colors["fg"],
-            font=ctk.CTkFont(size=14),
+            font=ctk.CTkFont(size=15),
             wrap="word"
         )
-        self.content_text.grid(row=4, column=0, sticky="nsew", padx=20, pady=10)
+        self.content_text.grid(row=4, column=0, sticky="nsew", padx=spacing["lg"], pady=spacing["md"])
         self.content_text.bind("<KeyRelease>", self.on_content_change)
         
-        # Bottom info frame
-        bottom_frame = ctk.CTkFrame(self, fg_color=colors["bg"], corner_radius=0)
-        bottom_frame.grid(row=5, column=0, sticky="ew", padx=20, pady=(0, 10))
+        # Bottom info frame with enhanced styling
+        bottom_frame = ctk.CTkFrame(self, fg_color="#F5F0FF", corner_radius=0)
+        bottom_frame.grid(row=5, column=0, sticky="ew", padx=spacing["lg"], pady=(0, spacing["md"]))
         bottom_frame.grid_columnconfigure(1, weight=1)
         
-        # Word count label
+        # Word count label with enhanced styling
         self.word_count_label = ctk.CTkLabel(
             bottom_frame,
             text="📝 Word count: 0",
-            font=ctk.CTkFont(size=11),
-            text_color=colors["fg"]
+            font=ctk.CTkFont(size=12),
+            text_color=colors["fg_secondary"]
         )
         self.word_count_label.grid(row=0, column=0, sticky="w")
         
-        # Status label
+        # Status label with enhanced styling
         self.status_label = ctk.CTkLabel(
             bottom_frame,
             text="",
-            font=ctk.CTkFont(size=12),
+            font=ctk.CTkFont(size=13),
             text_color=colors["accent"]
         )
         self.status_label.grid(row=0, column=1, sticky="e")
@@ -301,18 +318,18 @@ class EditorScreen(ctk.CTkFrame):
         """Update colors when theme changes"""
         colors = Theme.get_colors()
         
-        self.configure(fg_color=colors["bg"])
+        self.configure(fg_color="#F5F0FF")
         
         self.back_button.configure(
             fg_color=colors["button_bg"],
             text_color=colors["button_fg"],
-            hover_color=colors["card_hover"]
+            hover_color=colors["button_hover"] if "button_hover" in colors else colors["accent_dark"]
         )
         
         self.save_button.configure(
-            fg_color=colors["button_bg"],
+            fg_color=colors["accent"],
             text_color=colors["button_fg"],
-            hover_color=colors["card_hover"]
+            hover_color=colors["button_hover"] if "button_hover" in colors else colors["accent_dark"]
         )
         
         self.title_entry.configure(
@@ -321,12 +338,25 @@ class EditorScreen(ctk.CTkFrame):
             text_color=colors["fg"]
         )
         
+        self.tags_entry.configure(
+            border_color=colors["border"],
+            fg_color=colors["card_bg"],
+            text_color=colors["fg"]
+        )
+        
+        self.category_dropdown.configure(
+            fg_color=colors["button_bg"],
+            button_color=colors["accent"],
+            button_hover_color=colors["button_hover"] if "button_hover" in colors else colors["accent_dark"]
+        )
+        
         self.content_text.configure(
             border_color=colors["border"],
             fg_color=colors["card_bg"],
             text_color=colors["fg"]
         )
         
+        self.word_count_label.configure(text_color=colors["fg_secondary"])
         self.status_label.configure(text_color=colors["accent"])
     
     def load_note(self, note: Optional[Dict] = None):
@@ -383,9 +413,6 @@ class EditorScreen(ctk.CTkFrame):
         self.current_category = category
         self.on_save(title, content, self.current_note_id, tags, category)
         self.show_status(random.choice(RANDOM_CAT_MESSAGES))
-        
-        self.on_save(title, content, self.current_note_id)
-        self.show_status(CAT_MESSAGES["note_saved"])
     
     def schedule_auto_save(self, event=None):
         """Schedule auto-save after typing stops"""
