@@ -1,0 +1,8 @@
+{
+  "theme": "light",
+  "accent_color": "pink",
+  "window_width": 900,
+  "window_height": 700,
+  "auto_save_delay": 2000,
+  "font_size": 14
+}
