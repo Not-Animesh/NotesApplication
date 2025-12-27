@@ -58,12 +58,40 @@ class HomeScreen(ctk.CTkFrame):
         header_frame.grid(row=0, column=0, sticky="ew", padx=spacing["lg"], pady=(spacing["lg"], spacing["md"]))
         header_frame.grid_columnconfigure(1, weight=1)
         
-        # Title with refined typography
+        # App title with icon image
+        # Title text font (keep this size as-is)
+        title_font = ctk.CTkFont(size=30, weight="bold")
+
+        # Icon size is independent so you can tweak only the cat size here
+        icon_size = 50  # change this value to make the cat bigger/smaller
+
+        icon_path = Theme.get_asset_path("app_icon.png")
+        self.app_icon_image = None
+        if icon_path and os.path.exists(icon_path):
+            try:
+                img = Image.open(icon_path)
+                self.app_icon_image = ctk.CTkImage(
+                    light_image=img,
+                    dark_image=img,
+                    size=(icon_size, icon_size)
+                )
+            except:
+                self.app_icon_image = None
+
+        title_text = "KittyNotes"
+        title_image = self.app_icon_image
+        if title_image is None:
+            # Fallback to emoji if icon not available
+            title_text = "🐱 KittyNotes"
+
         title_label = ctk.CTkLabel(
             header_frame,
-            text="🐱 WhiskerNotes",
-            font=ctk.CTkFont(size=30, weight="bold"),
-            text_color=colors["fg"]
+            text=title_text,
+            image=title_image,
+            compound="left",  # icon + text on the same line
+            font=title_font,
+            text_color=colors["fg"],
+            anchor="center"  # center-align text with the cat icon
         )
         title_label.grid(row=0, column=0, sticky="w", padx=(0, spacing["md"]))
         

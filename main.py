@@ -27,7 +27,7 @@ class WhiskerNotes(ctk.CTk):
         self.config = ConfigService()
         
         # Window configuration
-        self.title("WhiskerNotes 🐱")
+        self.title("KittyCat 🐱")
         width = self.config.get_setting("window_width", 900)
         height = self.config.get_setting("window_height", 700)
         self.geometry(f"{width}x{height}")
@@ -50,12 +50,8 @@ class WhiskerNotes(ctk.CTk):
         ctk.set_appearance_mode("light")
         colors = Theme.get_colors()
         
-        # Setup background image first (before other widgets)
-        self._setup_background()
-        
-        # Set window background to blend with lavender gradient
-        # Using a very light lavender that allows background image to show through
-        self.configure(fg_color="#F5F0FF")
+        # Use theme background color (no image) for fast startup
+        self.configure(fg_color=colors.get("bg", "#F5F0FF"))
         
         # Configure grid
         self.grid_columnconfigure(0, weight=1)
@@ -69,69 +65,9 @@ class WhiskerNotes(ctk.CTk):
         self.show_home_screen()
     
     def _load_image(self, path):
-        """Load image from path"""
+        """Load image from path (used only for small icons)"""
         from PIL import Image
         return Image.open(path)
-    
-    def _setup_background(self):
-        """Setup background image for the entire application window"""
-        try:
-            from PIL import Image, ImageTk
-            import tkinter as tk
-            
-            bg_path = Theme.get_background_image()
-            if bg_path and os.path.exists(bg_path):
-                # Load background image
-                self.bg_image_original = Image.open(bg_path)
-                
-                # Create a canvas widget that fills the entire window
-                self.bg_canvas = tk.Canvas(
-                    self, 
-                    highlightthickness=0, 
-                    bd=0,
-                    bg="#FAF8F3"  # Fallback color matching theme
-                )
-                # Place canvas to fill entire window
-                self.bg_canvas.place(x=0, y=0, relwidth=1, relheight=1)
-                
-                # Function to update background image size on window resize
-                def update_bg(event=None):
-                    try:
-                        if hasattr(self, 'bg_canvas') and hasattr(self, 'bg_image_original'):
-                            width = self.winfo_width()
-                            height = self.winfo_height()
-                            if width > 1 and height > 1:
-                                # Resize image to match window size
-                                resized = self.bg_image_original.resize(
-                                    (width, height), 
-                                    Image.Resampling.LANCZOS
-                                )
-                                # Convert to PhotoImage
-                                self.bg_photo = ImageTk.PhotoImage(resized)
-                                # Clear canvas and add new image
-                                self.bg_canvas.delete("all")
-                                self.bg_canvas.create_image(
-                                    0, 0, 
-                                    anchor="nw", 
-                                    image=self.bg_photo
-                                )
-                    except Exception:
-                        pass
-                
-                # Bind window resize event
-                self.bind("<Configure>", update_bg)
-                
-                # Initial background setup after window is ready
-                self.after(100, update_bg)
-                
-                # Store reference to prevent garbage collection
-                self.background_image_path = bg_path
-            else:
-                self.background_image_path = None
-        except Exception as e:
-            # Fallback if background loading fails
-            self.background_image_path = None
-            pass
     
     def show_home_screen(self):
         """Display the home screen"""
@@ -151,11 +87,9 @@ class WhiskerNotes(ctk.CTk):
             )
         
         colors = Theme.get_colors()
-        # Configure home screen to blend with background image
-        self.home_screen.configure(fg_color="#F5F0FF")
+        # Configure home screen to use theme background (no image)
+        self.home_screen.configure(fg_color=colors.get("bg", "#F5F0FF"))
         self.home_screen.grid(row=0, column=0, sticky="nsew")
-        
-        # Background canvas is placed first, so it stays behind other widgets automatically
         
         # Load and display notes
         self.refresh_notes()
@@ -181,8 +115,8 @@ class WhiskerNotes(ctk.CTk):
             )
         
         colors = Theme.get_colors()
-        # Configure editor screen to blend with background
-        self.editor_screen.configure(fg_color="#F5F0FF")
+        # Configure editor screen to use theme background (no image)
+        self.editor_screen.configure(fg_color=colors.get("bg", "#F5F0FF"))
         self.editor_screen.grid(row=0, column=0, sticky="nsew")
         
         # Load note data
