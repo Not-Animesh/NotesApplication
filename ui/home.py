@@ -123,6 +123,7 @@ class HomeScreen(ctk.CTkFrame):
         self.search_entry = ctk.CTkEntry(
             search_frame,
             placeholder_text="🔍 Search notes by title, content, or tags...",
+            placeholder_text_color=colors["fg_secondary"],
             height=42,
             corner_radius=radius["lg"],
             border_width=2,
@@ -134,7 +135,7 @@ class HomeScreen(ctk.CTkFrame):
         self.search_entry.grid(row=0, column=0, sticky="ew", padx=(0, spacing["sm"]))
         self.search_entry.bind("<KeyRelease>", self.on_search)
         
-        # Sort dropdown with refined styling
+        # Sort dropdown with refined styling - dark background to match header
         self.sort_var = ctk.StringVar(value="Last Edited")
         self.sort_dropdown = ctk.CTkOptionMenu(
             search_frame,
@@ -144,7 +145,8 @@ class HomeScreen(ctk.CTkFrame):
             width=170,
             height=42,
             corner_radius=radius["lg"],
-            fg_color=colors["button_bg"],
+            fg_color=colors["button_bg"],  # black background
+            text_color= "black",  # white text for contrast
             button_color=colors["accent"],
             button_hover_color=colors["button_hover"] if "button_hover" in colors else colors["accent_dark"],
             font=ctk.CTkFont(size=14)
@@ -430,8 +432,10 @@ class HomeScreen(ctk.CTkFrame):
                         tags_frame,
                         text=f"#{tag}",
                         font=ctk.CTkFont(size=11, weight="normal"),
-                        fg_color=colors["tag_bg"],
-                        text_color=colors["tag_fg"] if "tag_fg" in colors else colors["accent"],
+                        # Soft theme-matching pink/lavender background
+                        fg_color="#FCE4EC",
+                        # Dark text for elegant contrast
+                        text_color=colors["fg"],
                         corner_radius=radius["md"],
                         padx=spacing["sm"],
                         pady=3
@@ -453,42 +457,37 @@ class HomeScreen(ctk.CTkFrame):
         )
         category_label.grid(row=0, column=0, sticky="w")
         
-        # Word count
-        word_count = note.get("word_count", 0)
-        wc_label = ctk.CTkLabel(
-            info_frame,
-            text=f"📝 {word_count} words",
-            font=ctk.CTkFont(size=11),
-            text_color=colors["fg_secondary"]
-        )
-        wc_label.grid(row=0, column=1, padx=spacing["md"])
-        
         # Updated time
         updated_at = note.get("updated_at", "")
         if updated_at:
-            # Format timestamp for better readability
-            time_display = updated_at[:16] if len(updated_at) > 16 else updated_at
+            # Use raw stored timestamp; formatting will be handled in editor view when needed
+            time_display = updated_at
             time_label = ctk.CTkLabel(
                 info_frame,
                 text=f"🐾 {time_display}",
                 font=ctk.CTkFont(size=11),
-                text_color=colors["accent"]
+                text_color="#702A44"
             )
-            time_label.grid(row=0, column=2, sticky="e")
+            time_label.grid(row=0, column=1, sticky="e")
         
         # Button frame (top right of card) with refined positioning
         button_frame = ctk.CTkFrame(card, fg_color=colors["card_bg"], corner_radius=0)
         button_frame.grid(row=0, column=1, rowspan=4, padx=spacing["sm"], pady=spacing["md"], sticky="ne")
         
+        # Standardized button dimensions
+        button_width = 100
+        button_height = 36
+        
         # Pin/Unpin button with refined styling
-        pin_text = "📌" if is_pinned else "📌"
+        
+        pin_fg = colors["accent"] if not is_pinned else colors["pin_color"]
         pin_btn = ctk.CTkButton(
             button_frame,
-            text=pin_text,
-            width=80,
-            height=36,
+            text="📌      Pin",
+            width=button_width,
+            height=button_height,
             corner_radius=radius["md"],
-            fg_color=colors["pin_color"] if is_pinned else colors["button_bg"],
+            fg_color=pin_fg,
             text_color=colors["button_fg"],
             hover_color=colors["button_hover"] if "button_hover" in colors else colors["accent_dark"],
             font=ctk.CTkFont(size=13),
@@ -500,8 +499,8 @@ class HomeScreen(ctk.CTkFrame):
         edit_btn = ctk.CTkButton(
             button_frame,
             text="✏️ Edit",
-            width=80,
-            height=36,
+            width=button_width,
+            height=button_height,
             corner_radius=radius["md"],
             fg_color=colors["accent"],
             text_color=colors["button_fg"],
@@ -515,12 +514,12 @@ class HomeScreen(ctk.CTkFrame):
         delete_btn = ctk.CTkButton(
             button_frame,
             text="🗑️ Delete",
-            width=80,
-            height=36,
+            width=button_width,
+            height=button_height,
             corner_radius=radius["md"],
-            fg_color=colors["error"],
-            text_color="#FFFFFF",
-            hover_color="#E53935",
+            fg_color=colors["accent"],
+            text_color=colors["button_fg"],
+            hover_color=colors["error"],  # red on hover
             font=ctk.CTkFont(size=13),
             command=lambda: self.delete_note_with_confirm(note["id"])
         )
